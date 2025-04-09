@@ -19,6 +19,7 @@ export default function BottomTabNavigator() {
       initialRouteName="TabOne"
       screenOptions={{ tabBarActiveTintColor: Colors[colorScheme].tint }}
     >
+
       <BottomTab.Screen
         name="TabOne"
         component={TabOneNavigator}
@@ -29,6 +30,7 @@ export default function BottomTabNavigator() {
           ),
         }}
       />
+
       <BottomTab.Screen
         name="TabTwo"
         component={TabTwoNavigator}
@@ -52,6 +54,18 @@ function TabBarIcon(props) {
 // Each tab has its own navigation stack, you can read more about this pattern here:
 // https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
 const TabOneStack = createStackNavigator();
+
+function HomeNavigator() {
+  return (
+    <TabOneStack.Navigator>
+      <TabOneStack.Screen
+        name="TabHomeScreen"
+        component={TabHomeScreen}
+        options={{ headerTitle: "home" }}
+      />
+    </TabOneStack.Navigator>
+  );
+}
 
 function TabOneNavigator() {
   return (
