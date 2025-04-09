@@ -14,7 +14,7 @@ export default function ItemListScreen() {
           lightColor="rgba(0,0,0,0.8)"
           darkColor="rgba(255,255,255,0.8)"
         >
-          This is a future item list screen.
+          This is a item list screen.
         </Text>
       </View>
     </View>
