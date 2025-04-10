@@ -1,10 +1,19 @@
 import { StyleSheet } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback } from "react";
 
-import EditScreenInfo from "../components/EditScreenInfo";
-import ItemList from "../components/item/ItemList"
 import { Text, View } from "../components/Themed";
+import SchedulerWeekChart from "../components/SchedulerWeekChart";
 
 export default function TabOneScreen() {
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshKey((prevKey) => prevKey + 1);
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Start</Text>
@@ -13,7 +22,7 @@ export default function TabOneScreen() {
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
-      <EditScreenInfo path="/screens/TabOneScreen.tsx" />
+      <SchedulerWeekChart key={refreshKey} />
     </View>
   );
 }
