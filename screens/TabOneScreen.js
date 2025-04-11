@@ -3,7 +3,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback } from "react";
 
 import { Text, View } from "../components/Themed";
-import SchedulerWeekChart from "../components/SchedulerWeekChart";
+import SchedulerTabbedView from "../components/week_view/SchedulerTabbedView";
+
 
 export default function TabOneScreen() {
   const [refreshKey, setRefreshKey] = React.useState(0);
@@ -16,13 +17,9 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Start</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
-      <SchedulerWeekChart key={refreshKey} />
+      <View style={{ flex: 1 }}>
+        <SchedulerTabbedView />
+      </View>
     </View>
   );
 }

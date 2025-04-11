@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-  Modal,
-  TextInput,
-  Button,
-  Platform,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, FlatList, Alert } from "react-native";
+import { Button, TextInput, IconButton, useTheme } from "react-native-paper";
+import { DatePickerModal } from "react-native-paper-dates";
 import SchedulingService from "../core/schedulingService";
 
+
 export default function SchedulerList() {
+  const { colors } = useTheme(); // Obtém as cores do tema atual do react-native-paper
   const [schedulers, setSchedulers] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [formVisible, setFormVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
   const [newSchedule, setNewSchedule] = useState({
     name: "",
     description: "",
     priority: "medium",
-    eventDateTime: new Date(),
+    eventDateTime: null,
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     loadSchedulers();
@@ -32,12 +26,6 @@ export default function SchedulerList() {
   const loadSchedulers = async () => {
     const schedules = await SchedulingService.getAllSchedules();
     setSchedulers(schedules);
-  };
-
-  const handleDelete = async (id) => {
-    await SchedulingService.removeSchedule(id);
-    Alert.alert("Agendamento removido!");
-    loadSchedulers();
   };
 
   const handleCreate = async () => {
@@ -54,103 +42,118 @@ export default function SchedulerList() {
 
     await SchedulingService.addSchedule(scheduleToSave);
     Alert.alert("Agendamento criado!");
-    setModalVisible(false);
-    setNewSchedule({ name: "", description: "", priority: "medium", eventDateTime: new Date() });
+    setNewSchedule({ name: "", description: "", priority: "medium", eventDateTime: null });
+    setFormVisible(false);
     loadSchedulers();
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemText}>{item.name}</Text>
-      <Text style={styles.itemDescription}>{item.description}</Text>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDelete(item.id)}
-      >
-        <Text style={styles.deleteButtonText}>Deletar</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const handleDelete = async (id) => {
+    await SchedulingService.removeSchedule(id);
+    Alert.alert("Agendamento excluído!");
+    loadSchedulers();
+  };
 
-  const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setNewSchedule({ ...newSchedule, eventDateTime: selectedDate });
-    }
+  const openDatePicker = () => setVisible(true);
+  const closeDatePicker = () => setVisible(false);
+
+  const onConfirmDate = (params) => {
+    setSelectedDate(params.date);
+    setNewSchedule({ ...newSchedule, eventDateTime: params.date.toISOString() });
+    closeDatePicker();
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.createButtonText}>Criar Agendamento</Text>
-      </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={schedulers}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <View style={[styles.scheduleItem, { backgroundColor: colors.surface }]}>
+            <View style={styles.scheduleInfo}>
+              <Text style={[styles.scheduleName, { color: colors.onSurface }]}>
+                {item.name}
+              </Text>
+              <Text style={[styles.scheduleDate, { color: colors.onSurface }]}>
+                {new Date(item.eventDateTime).toLocaleString()}
+              </Text>
+            </View>
+            <IconButton
+              icon="delete"
+              color={colors.error}
+              size={20}
+              onPress={() => handleDelete(item.id)}
+            />
+          </View>
+        )}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhum agendamento encontrado.</Text>
+          <Text style={[styles.noSchedulesText, { color: colors.onBackground }]}>
+            Nenhum agendamento
+          </Text>
         }
       />
 
-      {/* Modal para criar agendamento */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Novo Agendamento</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome do Evento"
-              value={newSchedule.name}
-              onChangeText={(text) => setNewSchedule({ ...newSchedule, name: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Descrição"
-              value={newSchedule.description}
-              onChangeText={(text) =>
-                setNewSchedule({ ...newSchedule, description: text })
-              }
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Prioridade (low, medium, high)"
-              value={newSchedule.priority}
-              onChangeText={(text) =>
-                setNewSchedule({ ...newSchedule, priority: text })
-              }
-            />
-            <TouchableOpacity
-              style={styles.datePickerButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.datePickerButtonText}>
-                {`Data e Hora do Evento: ${newSchedule.eventDateTime.toLocaleString()}`}
-              </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={newSchedule.eventDateTime}
-                mode="datetime"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={handleDateChange}
-              />
-            )}
-            <View style={styles.modalButtons}>
-              <Button title="Cancelar" onPress={() => setModalVisible(false)} />
-              <Button title="Salvar" onPress={handleCreate} />
-            </View>
-          </View>
+      {/* Botão para exibir o formulário */}
+      {!formVisible && (
+        <Button
+          mode="contained"
+          onPress={() => setFormVisible(true)}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
+        >
+          +
+        </Button>
+      )}
+
+      {/* Formulário de criação de agendamento */}
+      {formVisible && (
+        <View style={[styles.form, { backgroundColor: colors.surface }]}>
+          <TextInput
+            label="Nome do Evento"
+            value={newSchedule.name}
+            onChangeText={(text) => setNewSchedule({ ...newSchedule, name: text })}
+            style={[styles.input, { backgroundColor: colors.background }]}
+            theme={{ colors: { text: colors.onBackground } }}
+          />
+          <TextInput
+            label="Descrição"
+            value={newSchedule.description}
+            onChangeText={(text) => setNewSchedule({ ...newSchedule, description: text })}
+            style={[styles.input, { backgroundColor: colors.background }]}
+            theme={{ colors: { text: colors.onBackground } }}
+          />
+          <Button
+            mode="contained"
+            onPress={openDatePicker}
+            style={[styles.dateButton, { backgroundColor: colors.primary }]}
+          >
+            {selectedDate
+              ? `Data Selecionada: ${selectedDate.toLocaleDateString()}`
+              : "Selecionar Data"}
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleCreate}
+            style={[styles.createButton, { backgroundColor: colors.primary }]}
+          >
+            Criar Agendamento
+          </Button>
+          <Button
+            mode="text"
+            onPress={() => setFormVisible(false)}
+            style={[styles.cancelButton, { color: colors.error }]}
+          >
+            Cancelar
+          </Button>
         </View>
-      </Modal>
+      )}
+
+      <DatePickerModal
+        locale="pt"
+        mode="single"
+        visible={visible}
+        onDismiss={closeDatePicker}
+        date={selectedDate}
+        onConfirm={onConfirmDate}
+      />
     </View>
   );
 }
@@ -158,104 +161,64 @@ export default function SchedulerList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     padding: 20,
   },
-  createButton: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 5,
-    alignItems: "center",
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
     marginBottom: 20,
   },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  itemContainer: {
-    color: "#fff",
-    //backgroundColor: "#f9f9f9",
+  scheduleItem: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
   },
-  itemText: {
-    fontSize: 18,
-    fontWeight: "bold",
+  scheduleInfo: {
+    flex: 1,
   },
-  itemDescription: {
-    fontSize: 14,
-    color: "#666",
-    marginVertical: 5,
-  },
-  deleteButton: {
-    backgroundColor: "#f44336",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  emptyText: {
-    textAlign: "center",
+  scheduleName: {
     fontSize: 16,
-    //color: "#999",
+    fontWeight: "bold",
+  },
+  scheduleDate: {
+    fontSize: 14,
+    marginTop: 5,
+  },
+  noSchedulesText: {
+    fontSize: 16,
+    textAlign: "center",
     marginTop: 20,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    width: "90%",
-    //backgroundColor: "#000",
-    borderRadius: 10,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#fff",
+  form: {
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 5,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
     marginBottom: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    color: "#000",
   },
-  datePickerButton: {
-    backgroundColor: "rgb(161, 161, 161);",
-    padding: 10,
-    borderRadius: 5,
+  dateButton: {
+    marginBottom: 10,
+  },
+  createButton: {
+    marginBottom: 10,
+  },
+  cancelButton: {
+    alignSelf: "center",
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
-  },
-  datePickerButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  modalButtons: {
-    color: "#4CAF50",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
   },
 });

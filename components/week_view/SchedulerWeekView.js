@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import SchedulingService from "../core/schedulingService";
+import SchedulingService from "../../core/schedulingService";
 
 export default function SchedulerWeekView() {
   const [groupedSchedules, setGroupedSchedules] = useState({});
