@@ -28,6 +28,12 @@ export default function SchedulerTabbedView() {
       grouped[dayName].push(schedule);
     });
 
+    // Ordena os eventos de cada dia do mais próximo ao mais distante
+    Object.keys(grouped).forEach((day) => {
+      grouped[day].sort((a, b) => new Date(a.eventDateTime) - new Date(b.eventDateTime));
+    });
+
+    // Garante que todos os dias da semana estejam presentes
     daysOfWeek.forEach((day) => {
       if (!grouped[day]) {
         grouped[day] = [];
@@ -116,23 +122,6 @@ const styles = StyleSheet.create({
   scheduleList: {
     flex: 1,
     padding: 20,
-  },
-  scheduleItem: {
-    backgroundColor: "rgba(170, 142, 223, 0.24)",
-    borderColor: "rgb(170, 142, 223)",
-    padding: 15,
-    borderRadius: 5,
-    marginBottom: 10,
-    borderWidth: 2,
-  },
-  scheduleName: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  scheduleDate: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 5,
   },
   noSchedulesText: {
     fontSize: 16,
