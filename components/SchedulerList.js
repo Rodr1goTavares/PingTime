@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, FlatList, Alert } from "react-native";
+import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableWithoutFeedback } from "react-native";
 import { Button, TextInput, IconButton, useTheme } from "react-native-paper";
 import { DatePickerModal } from "react-native-paper-dates";
 import { useScheduler } from "../context/SchedulerContext";
@@ -8,7 +8,7 @@ export default function SchedulerList() {
   const { colors } = useTheme();
   const { schedulers, addSchedule, removeSchedule } = useScheduler(); // Consome o contexto
   const [visible, setVisible] = useState(false);
-  const [formVisible, setFormVisible] = useState(false);
+  const [formVisible, setFormVisible] = useState(false); // Controla a exibição do modal
   const [selectedDate, setSelectedDate] = useState(null);
 
   const [newSchedule, setNewSchedule] = useState({
@@ -33,7 +33,7 @@ export default function SchedulerList() {
     addSchedule(scheduleToSave); // Adiciona ao contexto
     Alert.alert("Agendamento criado!");
     setNewSchedule({ name: "", description: "", priority: "medium", eventDateTime: null });
-    setFormVisible(false);
+    setFormVisible(false); // Fecha o modal
   };
 
   const handleDelete = (id) => {
@@ -80,18 +80,26 @@ export default function SchedulerList() {
         }
       />
 
-      {!formVisible && (
-        <Button
-          mode="contained"
-          onPress={() => setFormVisible(true)}
-          style={[styles.addButton, { backgroundColor: colors.primary }]}
-        >
-          +
-        </Button>
-      )}
+      {/* Botão para abrir o modal */}
+      <Button
+        mode="contained"
+        onPress={() => setFormVisible(true)}
+        style={[styles.addButton, { backgroundColor: colors.primary }]}
+      >
+        +
+      </Button>
 
-      {formVisible && (
-        <View style={[styles.form, { backgroundColor: colors.surface }]}>
+      {/* Modal para o formulário */}
+      <Modal
+        visible={formVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setFormVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setFormVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
           <TextInput
             label="Nome do Evento"
             value={newSchedule.name}
@@ -130,7 +138,7 @@ export default function SchedulerList() {
             Cancelar
           </Button>
         </View>
-      )}
+      </Modal>
 
       <DatePickerModal
         locale="pt"
@@ -146,6 +154,8 @@ export default function SchedulerList() {
 
 const styles = StyleSheet.create({
   container: {
+    width: "100%",
+    height: "100%",
     flex: 1,
     padding: 20,
   },
@@ -173,10 +183,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  form: {
-    marginTop: 20,
-    padding: 15,
-    borderRadius: 5,
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Escurece o fundo
+  },
+  modalContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   input: {
     marginBottom: 10,
@@ -189,15 +217,5 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     alignSelf: "center",
-  },
-  addButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    borderRadius: 50,
-    width: 60,
-    height: 60,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
