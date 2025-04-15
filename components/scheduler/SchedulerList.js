@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableWithoutFeedback } from "react-native";
 import { Button, TextInput, IconButton, useTheme } from "react-native-paper";
 import { DatePickerModal } from "react-native-paper-dates";
-import { useScheduler } from "../context/SchedulerContext";
+import { useScheduler } from "../../context/SchedulerContext";
 
 export default function SchedulerList() {
   const { colors } = useTheme();

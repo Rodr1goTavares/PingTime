@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useScheduler } from "../../context/SchedulerContext";
-import Scheduler from "../scheduler/Scheduler"; // Importa o componente Scheduler
+import Scheduler from "./Scheduler"; // Importa o componente Scheduler
 
 export default function SchedulerTabbedView() {
   const { schedulers } = useScheduler();

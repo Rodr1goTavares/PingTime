@@ -1,4 +1,5 @@
 import "react-native-gesture-handler";
+import * as Notifications from "expo-notifications";
 
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -9,6 +10,15 @@ import { useColorScheme } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { SchedulerProvider } from "./context/SchedulerContext";
 
+// Configuração para lidar com notificações enquanto o app está em primeiro plano
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function App() {
   const isLoadingComplete = useLoadedAssets();
   const colorScheme = useColorScheme();
@@ -17,7 +27,7 @@ export default function App() {
     return null;
   } else {
     return (
-      <SchedulerProvider>      
+      <SchedulerProvider>
         <PaperProvider>
           <SafeAreaProvider>
             <Navigation colorScheme={colorScheme} />

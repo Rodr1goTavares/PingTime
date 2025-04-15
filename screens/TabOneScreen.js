@@ -3,12 +3,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback } from "react";
 
 import { Text, View } from "../components/Themed";
-import SchedulerTabbedView from "../components/week_view/SchedulerTabbedView";
+import SchedulerTabbedView from "../components/scheduler/SchedulerTabbedView";
 
 
 export default function TabOneScreen() {
   const [refreshKey, setRefreshKey] = React.useState(0);
-
   useFocusEffect(
     useCallback(() => {
       setRefreshKey((prevKey) => prevKey + 1);

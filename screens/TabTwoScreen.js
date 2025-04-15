@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 
 import { Text, View } from "../components/Themed";
-import SchedulerList from "../components/SchedulerList.js";
+import SchedulerList from "../components/scheduler/SchedulerList.js";
 
 
 export default function TabTwoScreen() {
