@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useScheduler } from "../../context/SchedulerContext";
+import Scheduler from "../scheduler/Scheduler"; // Importa o componente Scheduler
 
 export default function SchedulerTabbedView() {
-  const { schedulers } = useScheduler(); // Consome o contexto
+  const { schedulers } = useScheduler();
   const [groupedSchedules, setGroupedSchedules] = useState({});
   const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const today = new Date();
@@ -12,7 +13,7 @@ export default function SchedulerTabbedView() {
   useEffect(() => {
     const grouped = groupSchedulesByDay(schedulers);
     setGroupedSchedules(grouped);
-  }, [schedulers]); // Atualiza quando os agendamentos mudam
+  }, [schedulers]);
 
   const groupSchedulesByDay = (schedules) => {
     const grouped = {};
@@ -38,6 +39,7 @@ export default function SchedulerTabbedView() {
 
   return (
     <View style={styles.container}>
+      {/* Abas para os dias da semana */}
       <View style={styles.tabs}>
         {daysOfWeek.map((day) => (
           <TouchableOpacity
@@ -60,15 +62,16 @@ export default function SchedulerTabbedView() {
         ))}
       </View>
 
+      {/* Lista de agendamentos do dia selecionado */}
       <ScrollView style={styles.scheduleList}>
         {groupedSchedules[selectedDay]?.length > 0 ? (
           groupedSchedules[selectedDay].map((schedule) => (
-            <View key={schedule.id} style={styles.scheduleItem}>
-              <Text style={styles.scheduleName}>{schedule.name}</Text>
-              <Text style={styles.scheduleDate}>
-                {new Date(schedule.eventDateTime).toLocaleString()}
-              </Text>
-            </View>
+            <Scheduler
+              key={schedule.id}
+              name={schedule.name}
+              date={schedule.eventDateTime}
+              description={schedule.description}
+            />
           ))
         ) : (
           <Text style={styles.noSchedulesText}>Nenhum agendamento</Text>
@@ -80,6 +83,8 @@ export default function SchedulerTabbedView() {
 
 const styles = StyleSheet.create({
   container: {
+    width: "100%",
+    height: "100%",
     flex: 1,
     padding: 20,
   },

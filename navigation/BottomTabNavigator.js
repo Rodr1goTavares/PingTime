@@ -55,25 +55,13 @@ function TabBarIcon(props) {
 // https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
 const TabOneStack = createStackNavigator();
 
-function HomeNavigator() {
-  return (
-    <TabOneStack.Navigator>
-      <TabOneStack.Screen
-        name="TabHomeScreen"
-        component={TabHomeScreen}
-        options={{ headerTitle: "home" }}
-      />
-    </TabOneStack.Navigator>
-  );
-}
-
 function TabOneNavigator() {
   return (
     <TabOneStack.Navigator>
       <TabOneStack.Screen
         name="TabOneScreen"
         component={TabOneScreen}
-        options={{ headerTitle: "Tab One Title" }}
+        options={{ headerTitle: "Overview" }}
       />
     </TabOneStack.Navigator>
   );
@@ -87,7 +75,7 @@ function TabTwoNavigator() {
       <TabTwoStack.Screen
         name="TabTwoScreen"
         component={TabTwoScreen}
-        options={{ headerTitle: "Tab Two Title" }}
+        options={{ headerTitle: "Schedulers" }}
       />
     </TabTwoStack.Navigator>
   );
