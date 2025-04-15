@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, Alert } from "react-native";
 import { Button, TextInput, IconButton, useTheme } from "react-native-paper";
 import { DatePickerModal } from "react-native-paper-dates";
-import SchedulingService from "../core/schedulingService";
-
+import { useScheduler } from "../context/SchedulerContext";
 
 export default function SchedulerList() {
-  const { colors } = useTheme(); // Obtém as cores do tema atual do react-native-paper
-  const [schedulers, setSchedulers] = useState([]);
+  const { colors } = useTheme();
+  const { schedulers, addSchedule, removeSchedule } = useScheduler(); // Consome o contexto
   const [visible, setVisible] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -19,16 +18,7 @@ export default function SchedulerList() {
     eventDateTime: null,
   });
 
-  useEffect(() => {
-    loadSchedulers();
-  }, []);
-
-  const loadSchedulers = async () => {
-    const schedules = await SchedulingService.getAllSchedules();
-    setSchedulers(schedules);
-  };
-
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!newSchedule.name || !newSchedule.eventDateTime) {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
@@ -40,17 +30,15 @@ export default function SchedulerList() {
       scheduleDateTime: new Date().toISOString(),
     };
 
-    await SchedulingService.addSchedule(scheduleToSave);
+    addSchedule(scheduleToSave); // Adiciona ao contexto
     Alert.alert("Agendamento criado!");
     setNewSchedule({ name: "", description: "", priority: "medium", eventDateTime: null });
     setFormVisible(false);
-    loadSchedulers();
   };
 
-  const handleDelete = async (id) => {
-    await SchedulingService.removeSchedule(id);
+  const handleDelete = (id) => {
+    removeSchedule(id); // Remove do contexto
     Alert.alert("Agendamento excluído!");
-    loadSchedulers();
   };
 
   const openDatePicker = () => setVisible(true);
@@ -92,7 +80,6 @@ export default function SchedulerList() {
         }
       />
 
-      {/* Botão para exibir o formulário */}
       {!formVisible && (
         <Button
           mode="contained"
@@ -103,7 +90,6 @@ export default function SchedulerList() {
         </Button>
       )}
 
-      {/* Formulário de criação de agendamento */}
       {formVisible && (
         <View style={[styles.form, { backgroundColor: colors.surface }]}>
           <TextInput
@@ -161,14 +147,7 @@ export default function SchedulerList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    height: "100%",
     padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
   },
   scheduleItem: {
     flexDirection: "row",

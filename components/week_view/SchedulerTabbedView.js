@@ -1,30 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import SchedulingService from "../../core/schedulingService";
-
+import { useScheduler } from "../../context/SchedulerContext";
 
 export default function SchedulerTabbedView() {
+  const { schedulers } = useScheduler(); // Consome o contexto
   const [groupedSchedules, setGroupedSchedules] = useState({});
-  const [selectedDay, setSelectedDay] = useState("Dom");
   const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const today = new Date();
+  const [selectedDay, setSelectedDay] = useState(daysOfWeek[today.getDay()]);
 
   useEffect(() => {
-    loadSchedulers();
-  }, []);
-
-  const loadSchedulers = async () => {
-    const schedules = await SchedulingService.getAllSchedules();
-    const grouped = groupSchedulesByDay(schedules);
+    const grouped = groupSchedulesByDay(schedulers);
     setGroupedSchedules(grouped);
-  };
+  }, [schedulers]); // Atualiza quando os agendamentos mudam
 
   const groupSchedulesByDay = (schedules) => {
     const grouped = {};
 
     schedules.forEach((schedule) => {
-      // Converte a data do evento para o fuso horário local
       const eventDate = new Date(schedule.eventDateTime);
-      const dayName = daysOfWeek[eventDate.getDay()]; // Obtém o nome do dia da semana
+      const dayName = daysOfWeek[eventDate.getDay()];
 
       if (!grouped[dayName]) {
         grouped[dayName] = [];
@@ -32,7 +27,6 @@ export default function SchedulerTabbedView() {
       grouped[dayName].push(schedule);
     });
 
-    // Garante que todos os dias da semana estejam presentes
     daysOfWeek.forEach((day) => {
       if (!grouped[day]) {
         grouped[day] = [];
@@ -44,21 +38,20 @@ export default function SchedulerTabbedView() {
 
   return (
     <View style={styles.container}>
-      {/* Abas de navegação */}
       <View style={styles.tabs}>
         {daysOfWeek.map((day) => (
           <TouchableOpacity
             key={day}
             style={[
               styles.tab,
-              selectedDay === day && styles.activeTab, // Aba ativa
+              selectedDay === day && styles.activeTab,
             ]}
             onPress={() => setSelectedDay(day)}
           >
             <Text
               style={[
                 styles.tabText,
-                selectedDay === day && styles.activeTabText, // Texto da aba ativa
+                selectedDay === day && styles.activeTabText,
               ]}
             >
               {day}
@@ -67,7 +60,6 @@ export default function SchedulerTabbedView() {
         ))}
       </View>
 
-      {/* Lista de agendamentos do dia selecionado */}
       <ScrollView style={styles.scheduleList}>
         {groupedSchedules[selectedDay]?.length > 0 ? (
           groupedSchedules[selectedDay].map((schedule) => (
@@ -89,8 +81,6 @@ export default function SchedulerTabbedView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    height: "100%",
     padding: 20,
   },
   tabs: {
