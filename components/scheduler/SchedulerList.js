@@ -1,15 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, FlatList, Alert, Modal, TouchableWithoutFeedback } from "react-native";
+import { View, Text, StyleSheet, FlatList, Alert, Modal, Pressable } from "react-native";
 import { Button, TextInput, IconButton, useTheme } from "react-native-paper";
 import { DatePickerModal } from "react-native-paper-dates";
+import DatePicker from "react-native-date-picker"; // Importa o time picker
 import { useScheduler } from "../../context/SchedulerContext";
 
 export default function SchedulerList() {
   const { colors } = useTheme();
-  const { schedulers, addSchedule, removeSchedule } = useScheduler(); // Consome o contexto
+  const { schedulers, addSchedule, removeSchedule } = useScheduler();
   const [visible, setVisible] = useState(false);
-  const [formVisible, setFormVisible] = useState(false); // Controla a exibição do modal
+  const [formVisible, setFormVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null); // Estado para o horário
+  const [showTimePicker, setShowTimePicker] = useState(false); // Controla a exibição do time picker
 
   const [newSchedule, setNewSchedule] = useState({
     name: "",
@@ -30,14 +33,14 @@ export default function SchedulerList() {
       scheduleDateTime: new Date().toISOString(),
     };
 
-    addSchedule(scheduleToSave); // Adiciona ao contexto
+    addSchedule(scheduleToSave);
     Alert.alert("Agendamento criado!");
     setNewSchedule({ name: "", description: "", priority: "medium", eventDateTime: null });
-    setFormVisible(false); // Fecha o modal
+    setFormVisible(false);
   };
 
   const handleDelete = (id) => {
-    removeSchedule(id); // Remove do contexto
+    removeSchedule(id);
     Alert.alert("Agendamento excluído!");
   };
 
@@ -46,8 +49,30 @@ export default function SchedulerList() {
 
   const onConfirmDate = (params) => {
     setSelectedDate(params.date);
-    setNewSchedule({ ...newSchedule, eventDateTime: params.date.toISOString() });
+
+    // Atualiza o estado com a data combinada, se o horário já foi selecionado
+    if (selectedTime) {
+      const combinedDateTime = new Date(params.date);
+      combinedDateTime.setHours(selectedTime.getHours());
+      combinedDateTime.setMinutes(selectedTime.getMinutes());
+      setNewSchedule({ ...newSchedule, eventDateTime: combinedDateTime.toISOString() });
+    }
     closeDatePicker();
+  };
+
+  const openTimePicker = () => setShowTimePicker(true);
+
+  const onTimeConfirm = (time) => {
+    setShowTimePicker(false);
+    setSelectedTime(time);
+
+    // Atualiza o estado com a data combinada, se a data já foi selecionada
+    if (selectedDate) {
+      const combinedDateTime = new Date(selectedDate);
+      combinedDateTime.setHours(time.getHours());
+      combinedDateTime.setMinutes(time.getMinutes());
+      setNewSchedule({ ...newSchedule, eventDateTime: combinedDateTime.toISOString() });
+    }
   };
 
   return (
@@ -58,9 +83,7 @@ export default function SchedulerList() {
         renderItem={({ item }) => (
           <View style={[styles.scheduleItem, { backgroundColor: colors.surface }]}>
             <View style={styles.scheduleInfo}>
-              <Text style={[styles.scheduleName, { color: colors.onSurface }]}>
-                {item.name}
-              </Text>
+              <Text style={[styles.scheduleName, { color: colors.onSurface }]}>{item.name}</Text>
               <Text style={[styles.scheduleDate, { color: colors.onSurface }]}>
                 {new Date(item.eventDateTime).toLocaleString()}
               </Text>
@@ -80,7 +103,6 @@ export default function SchedulerList() {
         }
       />
 
-      {/* Botão para abrir o modal */}
       <Button
         mode="contained"
         onPress={() => setFormVisible(true)}
@@ -89,16 +111,15 @@ export default function SchedulerList() {
         +
       </Button>
 
-      {/* Modal para o formulário */}
       <Modal
         visible={formVisible}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setFormVisible(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setFormVisible(false)}>
+        <Pressable onPress={() => setFormVisible(false)}>
           <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
+        </Pressable>
         <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
           <TextInput
             label="Nome do Evento"
@@ -125,6 +146,15 @@ export default function SchedulerList() {
           </Button>
           <Button
             mode="contained"
+            onPress={openTimePicker}
+            style={[styles.dateButton, { backgroundColor: colors.primary }]}
+          >
+            {selectedTime
+              ? `Horário Selecionado: ${selectedTime.getHours()}:${selectedTime.getMinutes()}`
+              : "Selecionar Horário"}
+          </Button>
+          <Button
+            mode="contained"
             onPress={handleCreate}
             style={[styles.createButton, { backgroundColor: colors.primary }]}
           >
@@ -148,6 +178,29 @@ export default function SchedulerList() {
         date={selectedDate}
         onConfirm={onConfirmDate}
       />
+
+      <Modal
+        visible={showTimePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <View style={styles.timePickerContainer}>
+          <DatePicker
+            mode="time"
+            date={selectedTime || new Date()}
+            onDateChange={onTimeConfirm}
+            locale="pt"
+          />
+          <Button
+            mode="text"
+            onPress={() => setShowTimePicker(false)}
+            style={styles.cancelButton}
+          >
+            Fechar
+          </Button>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -195,7 +248,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Escurece o fundo
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     position: "absolute",
@@ -217,5 +270,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     alignSelf: "center",
+  },
+  timePickerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 });
